@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createOrder, createPaymentIntent, fetchCart, fetchQuote } from "@/utils/client-api";
 import { CartState, CheckoutQuote } from "@/utils/types";
@@ -14,6 +15,7 @@ const initialAddress = {
 };
 
 export function CheckoutPageClient() {
+  const router = useRouter();
   const [cart, setCart] = useState<CartState | null>(null);
   const [quote, setQuote] = useState<CheckoutQuote | null>(null);
   const [couponCode, setCouponCode] = useState("");
@@ -74,6 +76,7 @@ export function CheckoutPageClient() {
         setCart({ id: "cart-empty", userId: "usr-customer", items: [] });
         setQuote(null);
         setMessage(`Order ${order.id} created. Payment provider: ${payment.provider}. Amount: Rs ${payment.amount}.`);
+        router.push(`/order-success?orderId=${order.id}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to place order");
       }
@@ -156,4 +159,3 @@ export function CheckoutPageClient() {
     </section>
   );
 }
-

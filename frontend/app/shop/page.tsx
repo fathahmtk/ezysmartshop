@@ -42,6 +42,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           This page is structured for server-rendered filtering, category discovery, and future autocomplete integration.
         </p>
       </div>
+      <div className="mb-5 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+        <span className="rounded-full border border-slate-200 bg-white px-4 py-2">{filtered.length} products</span>
+        {category ? <span className="rounded-full border border-slate-200 bg-white px-4 py-2">Category: {category}</span> : null}
+        {q ? <span className="rounded-full border border-slate-200 bg-white px-4 py-2">Search: {q}</span> : null}
+      </div>
       <form className="mb-8 grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-4">
         <input
           name="q"

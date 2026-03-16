@@ -1,4 +1,6 @@
+import { AnnouncementBar } from "@/components/announcement-bar";
 import { HeroBanner } from "@/components/hero-banner";
+import { FeatureSpotlight } from "@/components/feature-spotlight";
 import { TrustStrip } from "@/components/trust-strip";
 import { CategoryGrid } from "@/components/category-grid";
 import { Newsletter } from "@/components/newsletter";
@@ -11,6 +13,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <AnnouncementBar />
       <HeroBanner />
       <TrustStrip />
       <CategoryGrid categories={categories} />
@@ -26,9 +29,9 @@ export default async function HomePage() {
         copy="Use timed promotions and banner placements to increase add-to-cart rates."
         products={getFlashDeals()}
       />
+      <FeatureSpotlight />
       <Testimonials testimonials={testimonials} />
       <Newsletter />
     </>
   );
 }
-

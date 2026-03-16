@@ -29,6 +29,20 @@ export function HeroBanner() {
                 Quick checkout
               </Link>
             </div>
+            <div className="grid gap-3 pt-2 sm:grid-cols-3">
+              <div className="rounded-3xl border border-slate-100 bg-white/80 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Avg delivery</p>
+                <p className="mt-2 text-lg font-semibold text-primary">3-5 days</p>
+              </div>
+              <div className="rounded-3xl border border-slate-100 bg-white/80 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Top offer</p>
+                <p className="mt-2 text-lg font-semibold text-primary">WELCOME10</p>
+              </div>
+              <div className="rounded-3xl border border-slate-100 bg-white/80 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Payment mix</p>
+                <p className="mt-2 text-lg font-semibold text-primary">COD + online</p>
+              </div>
+            </div>
           </div>
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
@@ -61,4 +75,3 @@ export function HeroBanner() {
     </section>
   );
 }
-

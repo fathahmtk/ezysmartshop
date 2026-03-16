@@ -4,10 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { addCartItem } from "@/utils/client-api";
 import { Product } from "@/utils/types";
+import { useState, useTransition } from "react";
 
 export function ProductCard({ product }: { product: Product }) {
   const discount = Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100);
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
 
   return (
     <motion.div whileHover={{ y: -6 }} className="glass-panel overflow-hidden">
@@ -39,7 +43,24 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </Link>
+      <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
+        <button
+          type="button"
+          className="text-sm font-semibold text-primary"
+          onClick={() =>
+            startTransition(async () => {
+              await addCartItem(product.id, 1);
+              setMessage("Added");
+              setTimeout(() => setMessage(null), 1800);
+            })
+          }
+        >
+          {isPending ? "Adding..." : message || "Quick add"}
+        </button>
+        <Link href={`/product/${product.slug}`} className="text-sm font-semibold text-accent">
+          View details
+        </Link>
+      </div>
     </motion.div>
   );
 }
-
