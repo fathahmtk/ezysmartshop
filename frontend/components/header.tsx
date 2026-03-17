@@ -41,7 +41,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/70 bg-white p-1">
               <Image
-                src="https://photos.fife.usercontent.google.com/pw/AP1GczMBukINmkrCIg8dIa9MoLxl5YyI1nHzMNddcBLveE51b_GZw8G0CqvIwA=w1319-h879-s-no-gm?authuser=0"
+                src="/logo.svg"
                 alt="EZY Smart Shop"
                 fill
                 className="object-cover"
