@@ -9,11 +9,11 @@ type OrderSuccessSearchParams = {
 };
 
 type OrderSuccessPageProps = {
-  searchParams?: OrderSuccessSearchParams | Promise<OrderSuccessSearchParams>;
+  searchParams?: Promise<OrderSuccessSearchParams>;
 };
 
 export default async function OrderSuccessPage({ searchParams }: OrderSuccessPageProps) {
-  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
   return (
     <section className="container-shell py-16">
