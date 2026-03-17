@@ -46,7 +46,7 @@ Change these immediately before production deployment.
 
 ## Additional docs
 
-- Deployment guide: [DEPLOYMENT.md](/C:/Users/abdul/OneDrive/Documents/Playground/DEPLOYMENT.md)
-- Frontend notes: [frontend/README.md](/C:/Users/abdul/OneDrive/Documents/Playground/frontend/README.md)
-- Backend notes: [backend/README.md](/C:/Users/abdul/OneDrive/Documents/Playground/backend/README.md)
-- API reference: [backend/src/docs/api.md](/C:/Users/abdul/OneDrive/Documents/Playground/backend/src/docs/api.md)
+- Deployment guide: [DEPLOYMENT.md](./DEPLOYMENT.md)
+- Frontend notes: [frontend/README.md](./frontend/README.md)
+- Backend notes: [backend/README.md](./backend/README.md)
+- API reference: [backend/src/docs/api.md](./backend/src/docs/api.md)
