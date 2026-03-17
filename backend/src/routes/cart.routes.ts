@@ -1,55 +1,62 @@
 import { Router } from "express";
 import { z } from "zod";
-import { addCartItem, getCart, removeCartItem, updateCartItem } from "../controllers/cart.controller";
+import { AppContainer } from "../application/container";
+import { createCartController } from "../controllers/cart.controller";
 import { requireAuth } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
 
-const router = Router();
+const emptyObject = z.object({}).strict();
 
-router.use(requireAuth);
+export default function createCartRoutes(container: AppContainer) {
+  const router = Router();
+  const { addCartItem, clearCart, getCart, removeCartItem, updateCartItem } = createCartController(container);
 
-router.get("/cart", getCart);
-router.post(
-  "/cart/items",
-  validate(
-    z.object({
-      body: z.object({
-        productId: z.string().min(1),
-        quantity: z.number().int().positive()
-      }),
-      query: z.any(),
-      params: z.any()
-    })
-  ),
-  addCartItem
-);
-router.patch(
-  "/cart/items/:itemId",
-  validate(
-    z.object({
-      body: z.object({
-        quantity: z.number().int().nonnegative()
-      }),
-      query: z.any(),
-      params: z.object({
-        itemId: z.string().min(1)
+  router.use(requireAuth);
+
+  router.get("/cart", getCart);
+  router.delete("/cart", clearCart);
+  router.post(
+    "/cart/items",
+    validate(
+      z.object({
+        body: z.object({
+          productId: z.string().min(1),
+          quantity: z.number().int().positive()
+        }).strict(),
+        query: emptyObject,
+        params: emptyObject
       })
-    })
-  ),
-  updateCartItem
-);
-router.delete(
-  "/cart/items/:itemId",
-  validate(
-    z.object({
-      body: z.any(),
-      query: z.any(),
-      params: z.object({
-        itemId: z.string().min(1)
+    ),
+    addCartItem
+  );
+  router.patch(
+    "/cart/items/:itemId",
+    validate(
+      z.object({
+        body: z.object({
+          quantity: z.number().int().nonnegative()
+        }).strict(),
+        query: emptyObject,
+        params: z.object({
+          itemId: z.string().min(1)
+        }).strict()
       })
-    })
-  ),
-  removeCartItem
-);
+    ),
+    updateCartItem
+  );
+  router.delete(
+    "/cart/items/:itemId",
+    validate(
+      z.object({
+        body: emptyObject,
+        query: emptyObject,
+        params: z.object({
+          itemId: z.string().min(1)
+        }).strict()
+      })
+    ),
+    removeCartItem
+  );
 
-export default router;
+  return router;
+}

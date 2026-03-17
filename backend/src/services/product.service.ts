@@ -1,20 +1,27 @@
-import { products } from "../data/seed";
+import { CategoryRepository, ProductRepository } from "../domain/repositories";
+
+type ProductServiceDependencies = {
+  productRepository: ProductRepository;
+  categoryRepository: CategoryRepository;
+};
 
 export class ProductService {
+  constructor(private readonly dependencies: ProductServiceDependencies) {}
+
   async list() {
-    return products;
+    return this.dependencies.productRepository.list();
   }
 
   async getBySlug(slug: string) {
-    return products.find((product) => product.slug === slug) || null;
+    return this.dependencies.productRepository.getBySlug(slug);
   }
 
   async search(query?: string) {
-    if (!query) return products;
-    const normalized = query.toLowerCase();
-    return products.filter((product) =>
-      [product.title, product.description, product.category].some((field) => field.toLowerCase().includes(normalized))
-    );
+    return this.dependencies.productRepository.search(query);
+  }
+
+  async listCategories() {
+    return this.dependencies.categoryRepository.list();
   }
 }
 

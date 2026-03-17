@@ -1,29 +1,48 @@
 import { Request, Response } from "express";
-import { CartService } from "../services/cart.service";
-import { OrderService } from "../services/order.service";
+import { AppContainer } from "../application/container";
 
-const orderService = new OrderService();
-const cartService = new CartService();
+export function createOrderController(container: AppContainer) {
+  const { orderService, cartService } = container.services;
 
-export async function listOrders(req: Request, res: Response) {
-  const entries = await orderService.listByUser(req.user!.id);
-  return res.json(entries);
-}
+  return {
+    listOrders: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const entries = await orderService.listByUser(req.user!.id);
+      return res.json(entries);
+    },
 
-export async function getQuote(req: Request, res: Response) {
-  const quote = await orderService.quote(req.body.items, req.body.couponCode);
-  return res.json(quote);
-}
+    getOrder: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const orderId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+      const order = await orderService.getById(req.user!.id, orderId);
+      return res.json(order);
+    },
 
-export async function createOrder(req: Request, res: Response) {
-  const order = await orderService.create({
-    userId: req.user!.id,
-    shippingAddress: req.body.shippingAddress,
-    items: req.body.items,
-    paymentMethod: req.body.paymentMethod,
-    couponCode: req.body.couponCode
-  });
-  await cartService.clearCart(req.user!.id);
+    getQuote: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const quote = await orderService.quote(req.body.items, req.body.couponCode);
+      return res.json(quote);
+    },
 
-  return res.status(201).json(order);
+    createOrder: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const order = await orderService.create({
+        userId: req.user!.id,
+        shippingAddress: req.body.shippingAddress,
+        items: req.body.items,
+        paymentMethod: req.body.paymentMethod,
+        couponCode: req.body.couponCode
+      });
+      await cartService.clearCart(req.user!.id);
+
+      return res.status(201).json(order);
+    },
+
+    cancelOrder: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const orderId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+      const order = await orderService.cancel(req.user!.id, orderId);
+      return res.json(order);
+    }
+  };
 }

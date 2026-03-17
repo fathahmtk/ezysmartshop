@@ -7,7 +7,8 @@ export function sessionCookieOptions(): CookieOptions {
     sameSite: "lax",
     secure: env.secureCookies,
     domain: env.cookieDomain,
-    path: "/"
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24 * 7
   };
 }
 

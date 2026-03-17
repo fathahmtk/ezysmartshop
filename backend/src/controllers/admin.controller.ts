@@ -1,27 +1,31 @@
 import { Request, Response } from "express";
-import { AnalyticsService } from "../services/analytics.service";
-import { coupons, orders, products, users } from "../data/seed";
+import { AppContainer } from "../application/container";
 
-const analyticsService = new AnalyticsService();
+export function createAdminController(container: AppContainer) {
+  const { analyticsService, couponService } = container.services;
+  const { orderRepository, productRepository, userRepository } = container.repositories;
 
-export async function dashboard(_req: Request, res: Response) {
-  const snapshot = await analyticsService.getAdminSnapshot();
-  return res.json(snapshot);
-}
+  return {
+    dashboard: async (_req: Request, res: Response) => {
+      const snapshot = await analyticsService.getAdminSnapshot();
+      return res.json(snapshot);
+    },
 
-export async function customers(_req: Request, res: Response) {
-  return res.json(users.map(({ password, ...user }) => user));
-}
+    customers: async (_req: Request, res: Response) => {
+      return res.json(await userRepository.listPublic());
+    },
 
-export async function inventory(_req: Request, res: Response) {
-  return res.json(products.map((product) => ({ id: product.id, title: product.title, stock: product.stock })));
-}
+    inventory: async (_req: Request, res: Response) => {
+      return res.json(await productRepository.listInventory());
+    },
 
-export async function orderReport(_req: Request, res: Response) {
-  return res.json(orders);
-}
+    orderReport: async (_req: Request, res: Response) => {
+      return res.json(await orderRepository.listAll());
+    },
 
-export async function couponList(_req: Request, res: Response) {
-  return res.json(coupons);
+    couponList: async (_req: Request, res: Response) => {
+      return res.json(await couponService.list());
+    }
+  };
 }
 

@@ -59,11 +59,19 @@ export type CheckoutQuote = {
 
 export type OrderRecord = {
   id: string;
+  items: Array<{
+    id: string;
+    productId: string;
+    quantity: number;
+    price: number;
+  }>;
   subtotal: number;
   discount: number;
   total: number;
-  paymentStatus: string;
-  orderStatus: string;
+  paymentMethod?: "razorpay" | "stripe" | "cod";
+  paymentStatus: "pending" | "paid" | "failed";
+  orderStatus: "created" | "packed" | "shipped" | "delivered" | "cancelled";
+  couponCode?: string;
   shippingAddress: string;
   createdAt: string;
 };

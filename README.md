@@ -37,12 +37,21 @@ backend/    Express API, services, schema, seed data
 
 The project is set up to run in preview mode with seeded data even if PostgreSQL, Redis, Stripe, Razorpay, or Firebase are not configured yet.
 
-## Default admin credentials
+For a production deployment baseline:
+
+- Set `NODE_ENV=production`
+- Set `DEMO_MODE=false` and `NEXT_PUBLIC_DEMO_MODE=false`
+- Replace seeded/bootstrap accounts before go-live
+- Set a long unique `JWT_SECRET`
+- Configure real Stripe and/or Razorpay credentials before enabling those payment methods
+- Run `npm run ci` before every release
+
+## Bootstrap admin credentials
 
 - Email: `admin@ezysmartshop.com`
 - Password: `Admin@123`
 
-Change these immediately before production deployment.
+These are for preview environments only. The backend now rejects bootstrap credentials in production.
 
 ## Additional docs
 

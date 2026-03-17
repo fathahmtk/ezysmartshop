@@ -24,6 +24,16 @@ Express REST API for EZY Smart Shop.
 
 The API is backed by seeded in-memory data by default so it runs without PostgreSQL, Redis, Firebase, Stripe, or Razorpay configured. Production adapters can replace the seed-backed services incrementally.
 
+## Architecture
+
+- `application/`: composition root and dependency container
+- `domain/`: repository contracts
+- `infrastructure/`: concrete persistence adapters
+- `services/`: business logic over interfaces
+- `controllers/` and `routes/`: HTTP delivery layer
+
+Set `DEMO_MODE=false` to disable demo-password login shortcuts outside preview environments.
+
 ## Commands
 
 ```bash

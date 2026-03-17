@@ -1,7 +1,18 @@
-import { orders, products } from "../data/seed";
+import { OrderRepository, ProductRepository } from "../domain/repositories";
+
+type AnalyticsServiceDependencies = {
+  orderRepository: OrderRepository;
+  productRepository: ProductRepository;
+};
 
 export class AnalyticsService {
+  constructor(private readonly dependencies: AnalyticsServiceDependencies) {}
+
   async getAdminSnapshot() {
+    const [orders, products] = await Promise.all([
+      this.dependencies.orderRepository.listAll(),
+      this.dependencies.productRepository.list()
+    ]);
     const revenue = orders.reduce((sum, order) => sum + order.total, 0);
     return {
       revenue,

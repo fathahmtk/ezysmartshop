@@ -3,20 +3,29 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
-import authRoutes from "./routes/auth.routes";
-import productRoutes from "./routes/product.routes";
-import cartRoutes from "./routes/cart.routes";
-import orderRoutes from "./routes/order.routes";
-import paymentRoutes from "./routes/payment.routes";
-import adminRoutes from "./routes/admin.routes";
-import recommendationRoutes from "./routes/recommendation.routes";
+import { createAppContainer } from "./application/container";
+import { attachRequestId } from "./middleware/request-id.middleware";
+import { logRequests } from "./middleware/request-logging.middleware";
+import createAuthRoutes from "./routes/auth.routes";
+import createProductRoutes from "./routes/product.routes";
+import createCartRoutes from "./routes/cart.routes";
+import createOrderRoutes from "./routes/order.routes";
+import createPaymentRoutes from "./routes/payment.routes";
+import createAdminRoutes from "./routes/admin.routes";
+import createRecommendationRoutes from "./routes/recommendation.routes";
 import { issueCsrfToken, verifyCsrfToken } from "./middleware/csrf.middleware";
-import couponRoutes from "./routes/coupon.routes";
+import createCouponRoutes from "./routes/coupon.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import { env } from "./config/env";
+import { getRedisClient } from "./services/cache.service";
 
 export function createApp() {
   const app = express();
+  const container = createAppContainer();
+  app.disable("x-powered-by");
+
+  app.use(attachRequestId);
+  app.use(logRequests);
 
   app.use(
     cors({
@@ -43,21 +52,39 @@ export function createApp() {
   app.use(verifyCsrfToken);
 
   app.get("/health", (_req, res) => {
+    res.set("Cache-Control", "no-store");
     res.json({ status: "ok" });
+  });
+
+  app.get("/ready", async (_req, res, next) => {
+    try {
+      const redis = await getRedisClient();
+      res.set("Cache-Control", "no-store");
+      res.json({
+        status: "ok",
+        environment: env.nodeEnv,
+        demoMode: env.demoMode,
+        services: {
+          redis: env.redisUrl ? (redis ? "up" : "down") : "disabled"
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.get("/api/csrf-token", (req, res) => {
     res.json({ csrfToken: req.csrfToken });
   });
 
-  app.use("/api", authRoutes);
-  app.use("/api", productRoutes);
-  app.use("/api", cartRoutes);
-  app.use("/api", orderRoutes);
-  app.use("/api", paymentRoutes);
-  app.use("/api", adminRoutes);
-  app.use("/api", recommendationRoutes);
-  app.use("/api", couponRoutes);
+  app.use("/api", createAuthRoutes(container));
+  app.use("/api", createProductRoutes(container));
+  app.use("/api", createCartRoutes(container));
+  app.use("/api", createOrderRoutes(container));
+  app.use("/api", createPaymentRoutes(container));
+  app.use("/api", createAdminRoutes(container));
+  app.use("/api", createRecommendationRoutes(container));
+  app.use("/api", createCouponRoutes(container));
 
   app.use((_req, res) => {
     res.status(404).json({ message: "Route not found" });

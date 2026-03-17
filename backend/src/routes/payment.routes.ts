@@ -1,31 +1,37 @@
 import { Router } from "express";
 import { z } from "zod";
-import { createPaymentIntent } from "../controllers/payment.controller";
+import { AppContainer } from "../application/container";
+import { createPaymentController } from "../controllers/payment.controller";
 import { requireAuth } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
 
-const router = Router();
+const emptyObject = z.object({}).strict();
 
-router.post(
-  "/payments/intent",
-  requireAuth,
-  validate(
-    z.object({
-      body: z.object({
-        method: z.enum(["razorpay", "stripe", "cod"]),
-        couponCode: z.string().trim().optional(),
-        items: z.array(
-          z.object({
-            productId: z.string(),
-            quantity: z.number().int().positive()
-          })
-        ).min(1)
-      }),
-      query: z.any(),
-      params: z.any()
-    })
-  ),
-  createPaymentIntent
-);
+export default function createPaymentRoutes(container: AppContainer) {
+  const router = Router();
+  const { createPaymentIntent } = createPaymentController(container);
 
-export default router;
+  router.post(
+    "/payments/intent",
+    requireAuth,
+    validate(
+      z.object({
+        body: z.object({
+          method: z.enum(["razorpay", "stripe", "cod"]),
+          couponCode: z.string().trim().optional(),
+          items: z.array(
+            z.object({
+              productId: z.string(),
+              quantity: z.number().int().positive()
+            }).strict()
+          ).min(1)
+        }).strict(),
+        query: emptyObject,
+        params: emptyObject
+      })
+    ),
+    createPaymentIntent
+  );
+
+  return router;
+}

@@ -1,7 +1,14 @@
-import { products } from "../data/seed";
+import { ProductRepository } from "../domain/repositories";
+
+type RecommendationServiceDependencies = {
+  productRepository: ProductRepository;
+};
 
 export class RecommendationService {
-  private fallbackRecommendations(productId?: string) {
+  constructor(private readonly dependencies: RecommendationServiceDependencies) {}
+
+  private async fallbackRecommendations(productId?: string) {
+    const products = await this.dependencies.productRepository.list();
     if (!productId) return products.slice(0, 4);
     const current = products.find((product) => product.id === productId);
     if (!current) return products.slice(0, 4);
@@ -14,6 +21,7 @@ export class RecommendationService {
     }
 
     try {
+      const products = await this.dependencies.productRepository.list();
       const subject = products.find((product) => product.id === productId);
       const prompt = `Return a JSON array of up to 4 product ids from this catalog that best match the current shopper intent. Current product: ${
         subject ? `${subject.title} in ${subject.category}` : "homepage visitor"

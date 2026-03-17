@@ -1,9 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { CreditCard, Plus, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { createOrder, createPaymentIntent, fetchCart, fetchQuote } from "@/utils/client-api";
-import { CartState, CheckoutQuote } from "@/utils/types";
+import { createOrder, createPaymentIntent, fetchQuote } from "@/utils/client-api";
+import { useCart } from "@/components/cart-provider";
+import { CheckoutQuote } from "@/utils/types";
+import { getBundleOffers } from "@/utils/bundle-offers";
 
 const initialAddress = {
   fullName: "Priya Sharma",
@@ -16,7 +20,6 @@ const initialAddress = {
 
 export function CheckoutPageClient() {
   const router = useRouter();
-  const [cart, setCart] = useState<CartState | null>(null);
   const [quote, setQuote] = useState<CheckoutQuote | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "stripe" | "cod">("razorpay");
@@ -24,22 +27,13 @@ export function CheckoutPageClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { addItem, cart, refreshCart } = useCart();
 
   const items = useMemo(
     () => cart?.items.map((item) => ({ productId: item.productId, quantity: item.quantity })) || [],
     [cart]
   );
-
-  useEffect(() => {
-    startTransition(async () => {
-      try {
-        const nextCart = await fetchCart();
-        setCart(nextCart);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load checkout");
-      }
-    });
-  }, []);
+  const orderBump = getBundleOffers(items.map((item) => item.productId))[0] || null;
 
   useEffect(() => {
     if (!items.length) {
@@ -66,6 +60,9 @@ export function CheckoutPageClient() {
       try {
         if (!items.length) throw new Error("Your cart is empty");
         const payment = await createPaymentIntent(paymentMethod, items, couponCode || undefined);
+        if (paymentMethod !== "cod" && payment.configured === false) {
+          throw new Error(`${payment.provider} is not configured in this environment`);
+        }
         const shippingAddress = `${address.fullName}, ${address.phone}, ${address.addressLine}, ${address.city}, ${address.state} ${address.pincode}`;
         const order = await createOrder({
           shippingAddress,
@@ -73,7 +70,7 @@ export function CheckoutPageClient() {
           couponCode: couponCode || undefined,
           items
         });
-        setCart({ id: "cart-empty", userId: "usr-customer", items: [] });
+        await refreshCart();
         setQuote(null);
         setMessage(`Order ${order.id} created. Payment provider: ${payment.provider}. Amount: Rs ${payment.amount}.`);
         router.push(`/order-success?orderId=${order.id}`);
@@ -86,11 +83,12 @@ export function CheckoutPageClient() {
   return (
     <section className="container-shell py-10">
       <div className="mb-8 space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Checkout flow</p>
+        <p className="eyebrow">Checkout flow</p>
         <h1 className="section-title">Address, shipping, payment, confirmation.</h1>
+        <p className="section-copy">The checkout surface is optimized for low-friction mobile completion and visible trust reassurance.</p>
       </div>
       <div className="grid gap-8 lg:grid-cols-[1fr_0.42fr]">
-        <form className="glass-panel space-y-6 p-6" onSubmit={handleSubmit}>
+        <form className="glass-panel space-y-6 p-5 md:p-6" onSubmit={handleSubmit}>
           <div>
             <p className="text-lg font-semibold text-primary">Shipping address</p>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -99,14 +97,14 @@ export function CheckoutPageClient() {
                   key={key}
                   value={value}
                   onChange={(event) => setAddress((current) => ({ ...current, [key]: event.target.value }))}
-                  className={`rounded-2xl border border-slate-200 px-4 py-3 text-sm ${key === "addressLine" ? "md:col-span-2" : ""}`}
+                  className={`field-input ${key === "addressLine" ? "md:col-span-2" : ""}`}
                   placeholder={key}
                 />
               ))}
               <input
                 value={couponCode}
                 onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
-                className="rounded-2xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
+                className="field-input md:col-span-2"
                 placeholder="Coupon code"
               />
             </div>
@@ -119,7 +117,7 @@ export function CheckoutPageClient() {
                 ["stripe", "Stripe"],
                 ["cod", "Cash on Delivery"]
               ].map(([value, label]) => (
-                <label key={value} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4 text-sm">
+                <label key={value} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                   <input
                     type="radio"
                     name="payment"
@@ -131,13 +129,74 @@ export function CheckoutPageClient() {
               ))}
             </div>
           </div>
+          <div className="grid gap-3 rounded-[1.75rem] bg-[#fff7ed] p-4 sm:grid-cols-3">
+            <div className="flex items-start gap-3">
+              <Truck className="mt-0.5 h-4 w-4 text-orange-600" />
+              <span className="text-sm text-slate-700">Fast dispatch for core SKUs</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 h-4 w-4 text-orange-600" />
+              <span className="text-sm text-slate-700">Protected payment flow</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <CreditCard className="mt-0.5 h-4 w-4 text-orange-600" />
+              <span className="text-sm text-slate-700">COD and online payments</span>
+            </div>
+          </div>
+          {orderBump ? (
+            <div className="overflow-hidden rounded-[1.9rem] border border-orange-100 bg-[#fff8ef]">
+              <div className="grid gap-4 md:grid-cols-[8.5rem_1fr]">
+                <div className="relative h-40 bg-[#f6ede2] md:h-full">
+                  <Image src={orderBump.product.images[0]} alt={orderBump.product.title} fill sizes="(max-width: 768px) 100vw, 136px" className="object-cover" />
+                </div>
+                <div className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                      Checkout order bump
+                    </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                      {orderBump.tag}
+                    </span>
+                  </div>
+                  <h2 className="mt-3 text-xl font-semibold tracking-tight text-primary">{orderBump.product.title}</h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{orderBump.reason}</p>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-primary">Add for Rs {orderBump.product.price}</p>
+                      <p className="text-sm text-slate-400 line-through">Rs {orderBump.product.comparePrice}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="button-secondary gap-2 px-5 py-3"
+                      disabled={isPending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          try {
+                            await addItem(orderBump.product.id, 1);
+                            await refreshCart();
+                            setMessage(`${orderBump.product.title} added to this checkout.`);
+                            setError(null);
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Failed to add order bump");
+                          }
+                        })
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add to order
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
           {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
           <button type="submit" className="button-primary" disabled={isPending || !items.length}>
             {isPending ? "Processing..." : "Confirm order"}
           </button>
         </form>
-        <aside className="glass-panel h-fit p-6">
+        <aside className="glass-panel h-fit p-6 lg:sticky lg:top-28">
           <p className="text-lg font-semibold text-primary">Summary</p>
           <div className="mt-6 space-y-3 text-sm text-slate-600">
             <div className="flex justify-between">
@@ -153,7 +212,20 @@ export function CheckoutPageClient() {
               <span>{quote ? `Rs ${quote.total}` : "--"}</span>
             </div>
           </div>
-          <div className="mt-6 border-t border-slate-200 pt-4 text-sm text-slate-600">Expected delivery: 3-5 business days</div>
+          <div className="mt-6 rounded-[1.5rem] bg-[#f8f2e8] p-4 text-sm text-slate-600">
+            <p className="font-semibold text-primary">Expected delivery</p>
+            <p className="mt-2">3-5 business days</p>
+            <p className="mt-3 font-semibold text-primary">Why customers complete this checkout</p>
+            <p className="mt-2">Clear totals, secure payment visibility, and COD support above the fold.</p>
+            <p className="mt-3 font-semibold text-primary">AOV booster</p>
+            <p className="mt-2">A single relevant order bump increases basket size without forcing shoppers back into browsing.</p>
+          </div>
+          <div className="mt-4 rounded-[1.5rem] border border-white/80 bg-white/80 p-4 text-sm text-slate-600">
+            <div className="flex items-start gap-3">
+              <Sparkles className="mt-0.5 h-4 w-4 text-orange-600" />
+              <span>Keep checkout short: useful add-ons, visible total, and one clear payment decision.</span>
+            </div>
+          </div>
         </aside>
       </div>
     </section>

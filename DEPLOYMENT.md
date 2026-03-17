@@ -12,6 +12,8 @@
 - Provision an AWS EC2 instance with Node.js 20, PM2 or systemd, Nginx, and Docker if preferred.
 - Copy the repository or build artifacts to the server.
 - Set the backend environment variables from `.env.example`.
+- Set `NODE_ENV=production`, `DEMO_MODE=false`, and `NEXT_PUBLIC_DEMO_MODE=false`.
+- Rotate seeded bootstrap users or replace the in-memory repository with a persistent production adapter before go-live.
 - Start the API with `npm run build --workspace backend` and `npm run start --workspace backend`.
 - Reverse proxy `/api` traffic through Nginx to port `4000`.
 
@@ -28,4 +30,5 @@
 - GitHub Actions runs the monorepo build through [.github/workflows/deploy.yml](/C:/Users/abdul/OneDrive/Documents/Playground/.github/workflows/deploy.yml).
 - Vercel should be connected directly to the repository for frontend auto-deployments.
 - EC2 deployment can be handled through SSH-based GitHub Actions or a pull-based PM2 workflow.
+- Use `/health` for liveness probes and `/ready` for readiness probes.
 

@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
-import { CouponService } from "../services/coupon.service";
+import { AppContainer } from "../application/container";
 
-const couponService = new CouponService();
+export function createCouponController(container: AppContainer) {
+  const { couponService } = container.services;
 
-export async function listCoupons(_req: Request, res: Response) {
-  const data = await couponService.list();
-  return res.json(data);
+  return {
+    listCoupons: async (_req: Request, res: Response) => {
+      const data = await couponService.list();
+      return res.json(data);
+    }
+  };
 }
 

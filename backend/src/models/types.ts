@@ -69,7 +69,7 @@ export type Order = {
   couponCode?: string;
   paymentMethod?: "razorpay" | "stripe" | "cod";
   paymentStatus: "pending" | "paid" | "failed";
-  orderStatus: "created" | "packed" | "shipped" | "delivered";
+  orderStatus: "created" | "packed" | "shipped" | "delivered" | "cancelled";
   shippingAddress: string;
   items: OrderItem[];
   createdAt: string;

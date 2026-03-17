@@ -1,29 +1,54 @@
 import dotenv from "dotenv";
+import { z } from "zod";
 import { assertValidJwtSecret, DEFAULT_JWT_SECRET } from "./jwt-secret";
 
 dotenv.config({ path: "../.env" });
 dotenv.config();
 
-const nodeEnv = process.env.NODE_ENV || "development";
-const jwtSecret = process.env.JWT_SECRET?.trim() || DEFAULT_JWT_SECRET;
+const envSchema = z.object({
+  PORT: z.coerce.number().int().positive().default(4000),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  DEMO_MODE: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => value !== "false"),
+  CLIENT_URL: z.string().url().default("http://localhost:3000"),
+  ALLOWED_ORIGINS: z.string().optional(),
+  JWT_SECRET: z.string().trim().min(1).default(DEFAULT_JWT_SECRET),
+  JWT_EXPIRES_IN: z.string().trim().min(1).default("7d"),
+  COOKIE_DOMAIN: z.string().trim().optional(),
+  REDIS_URL: z.string().trim().optional(),
+  STRIPE_SECRET_KEY: z.string().trim().optional(),
+  RAZORPAY_KEY_ID: z.string().trim().optional(),
+  RAZORPAY_KEY_SECRET: z.string().trim().optional(),
+  GEMINI_API_KEY: z.string().trim().optional(),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info")
+});
 
-assertValidJwtSecret(nodeEnv, jwtSecret);
+const parsed = envSchema.parse(process.env);
+const nodeEnv = parsed.NODE_ENV;
+const demoMode = parsed.DEMO_MODE;
+const jwtSecret = parsed.JWT_SECRET;
+
+assertValidJwtSecret(nodeEnv, jwtSecret, demoMode);
 
 export const env = {
-  port: Number(process.env.PORT || 4000),
+  port: parsed.PORT,
   nodeEnv,
-  clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || "http://localhost:3000")
+  demoMode,
+  clientUrl: parsed.CLIENT_URL,
+  allowedOrigins: (parsed.ALLOWED_ORIGINS || parsed.CLIENT_URL)
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean),
   jwtSecret,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
+  jwtExpiresIn: parsed.JWT_EXPIRES_IN,
+  cookieDomain: parsed.COOKIE_DOMAIN || undefined,
   secureCookies: nodeEnv === "production",
-  redisUrl: process.env.REDIS_URL || "",
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
-  razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
-  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || "",
-  geminiApiKey: process.env.GEMINI_API_KEY || ""
+  redisUrl: parsed.REDIS_URL || "",
+  stripeSecretKey: parsed.STRIPE_SECRET_KEY || "",
+  razorpayKeyId: parsed.RAZORPAY_KEY_ID || "",
+  razorpayKeySecret: parsed.RAZORPAY_KEY_SECRET || "",
+  geminiApiKey: parsed.GEMINI_API_KEY || "",
+  logLevel: parsed.LOG_LEVEL
 };

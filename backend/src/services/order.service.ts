@@ -1,7 +1,8 @@
-import { coupons, orders, products } from "../data/seed";
+import { OrderRepository, ProductRepository } from "../domain/repositories";
 import { CheckoutQuote } from "../models/types";
 import { AppError } from "../utils/app-error";
 import { createId } from "../utils/id";
+import { CouponService } from "./coupon.service";
 
 type CreateOrderInput = {
   userId: string;
@@ -11,9 +12,26 @@ type CreateOrderInput = {
   couponCode?: string;
 };
 
+type OrderServiceDependencies = {
+  orderRepository: OrderRepository;
+  productRepository: ProductRepository;
+  couponService: CouponService;
+};
+
 export class OrderService {
+  constructor(private readonly dependencies: OrderServiceDependencies) {}
+
   async listByUser(userId: string) {
-    return orders.filter((order) => order.userId === userId);
+    return this.dependencies.orderRepository.listByUser(userId);
+  }
+
+  async getById(userId: string, orderId: string) {
+    const order = await this.dependencies.orderRepository.getById(orderId);
+    if (!order || order.userId !== userId) {
+      throw new AppError("Order not found", 404);
+    }
+
+    return order;
   }
 
   async quote(items: Array<{ productId: string; quantity: number }>, couponCode?: string): Promise<CheckoutQuote> {
@@ -21,8 +39,10 @@ export class OrderService {
       throw new AppError("Order must include at least one item", 400);
     }
 
-    const normalizedItems = items.map((item) => {
-      const product = products.find((entry) => entry.id === item.productId);
+    const normalizedItems: CheckoutQuote["items"] = [];
+
+    for (const item of items) {
+      const product = await this.dependencies.productRepository.getById(item.productId);
       if (!product) {
         throw new AppError(`Product ${item.productId} not found`, 404);
       }
@@ -33,26 +53,23 @@ export class OrderService {
         throw new AppError(`Insufficient stock for ${product.title}`, 400);
       }
 
-      return {
+      normalizedItems.push({
         productId: product.id,
         title: product.title,
         quantity: item.quantity,
         unitPrice: product.price,
         lineTotal: product.price * item.quantity
-      };
-    });
+      });
+    }
 
     const subtotal = normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0);
     let discount = 0;
     let appliedCouponCode: string | undefined;
 
     if (couponCode) {
-      const coupon = coupons.find((entry) => entry.code.toLowerCase() === couponCode.toLowerCase());
+      const coupon = await this.dependencies.couponService.getValidCoupon(couponCode);
       if (!coupon) {
         throw new AppError("Coupon not found", 404);
-      }
-      if (new Date(coupon.expiry).getTime() < Date.now()) {
-        throw new AppError("Coupon has expired", 400);
       }
 
       appliedCouponCode = coupon.code;
@@ -75,14 +92,9 @@ export class OrderService {
 
   async create(input: CreateOrderInput) {
     const quote = await this.quote(input.items, input.couponCode);
-
-    for (const item of quote.items) {
-      const product = products.find((entry) => entry.id === item.productId);
-      if (!product) {
-        throw new AppError("Product not found during order creation", 404);
-      }
-      product.stock -= item.quantity;
-    }
+    await this.dependencies.productRepository.reserveStock(
+      quote.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+    );
 
     const order = {
       id: createId("ORD"),
@@ -103,7 +115,22 @@ export class OrderService {
       })),
       createdAt: new Date().toISOString()
     };
-    orders.unshift(order);
-    return order;
+    return this.dependencies.orderRepository.create(order);
+  }
+
+  async cancel(userId: string, orderId: string) {
+    const order = await this.getById(userId, orderId);
+
+    if (order.orderStatus !== "created") {
+      throw new AppError("Only newly created orders can be cancelled", 400);
+    }
+
+    const cancelled = {
+      ...order,
+      orderStatus: "cancelled" as const,
+      paymentStatus: order.paymentMethod === "cod" ? "failed" as const : order.paymentStatus
+    };
+
+    return this.dependencies.orderRepository.update(cancelled);
   }
 }

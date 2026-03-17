@@ -1,7 +1,11 @@
 import { AccountPageClient } from "@/components/account-page-client";
 
 export const metadata = {
-  title: "Account"
+  title: "Account",
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 export default function AccountPage() {

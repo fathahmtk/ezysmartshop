@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { getRecommendations } from "../controllers/recommendation.controller";
+import { AppContainer } from "../application/container";
+import { createRecommendationController } from "../controllers/recommendation.controller";
 
-const router = Router();
+export default function createRecommendationRoutes(container: AppContainer) {
+  const router = Router();
+  const { getRecommendations } = createRecommendationController(container);
 
-router.get("/recommendations", getRecommendations);
+  router.get("/recommendations", getRecommendations);
 
-export default router;
+  return router;
+}
 

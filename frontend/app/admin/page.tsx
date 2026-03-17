@@ -12,7 +12,11 @@ const topProducts = [
 ];
 
 export const metadata = {
-  title: "Admin Dashboard"
+  title: "Admin Dashboard",
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 export default function AdminPage() {

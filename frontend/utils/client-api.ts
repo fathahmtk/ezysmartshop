@@ -3,6 +3,7 @@
 import { CartState, CheckoutQuote, OrderRecord } from "@/utils/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 const DEMO_EMAIL = "priya@example.com";
 const DEMO_PASSWORD = "Customer@123";
 
@@ -35,6 +36,10 @@ async function getCsrfToken() {
 }
 
 export async function ensureDemoSession() {
+  if (!DEMO_MODE) {
+    throw new Error("Demo storefront mode is disabled for this deployment");
+  }
+
   if (!loginPromise) {
     loginPromise = (async () => {
       await getCsrfToken();
@@ -68,6 +73,10 @@ async function authedRequest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function getDemoCredentials() {
+  if (!DEMO_MODE) {
+    return null;
+  }
+
   return {
     email: DEMO_EMAIL,
     password: DEMO_PASSWORD
@@ -94,6 +103,12 @@ export function updateCartItem(itemId: string, quantity: number) {
 
 export function removeCartItem(itemId: string) {
   return authedRequest<CartState>(`/cart/items/${itemId}`, {
+    method: "DELETE"
+  });
+}
+
+export function clearCart() {
+  return authedRequest<CartState>("/cart", {
     method: "DELETE"
   });
 }
@@ -129,4 +144,14 @@ export function createOrder(payload: {
 
 export function fetchOrders() {
   return authedRequest<OrderRecord[]>("/orders");
+}
+
+export function fetchOrder(orderId: string) {
+  return authedRequest<OrderRecord>(`/orders/${orderId}`);
+}
+
+export function cancelOrder(orderId: string) {
+  return authedRequest<OrderRecord>(`/orders/${orderId}/cancel`, {
+    method: "PATCH"
+  });
 }

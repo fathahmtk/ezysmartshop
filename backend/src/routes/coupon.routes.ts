@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { listCoupons } from "../controllers/coupon.controller";
+import { AppContainer } from "../application/container";
+import { createCouponController } from "../controllers/coupon.controller";
 
-const router = Router();
+export default function createCouponRoutes(container: AppContainer) {
+  const router = Router();
+  const { listCoupons } = createCouponController(container);
 
-router.get("/coupons", listCoupons);
+  router.get("/coupons", listCoupons);
 
-export default router;
+  return router;
+}
 

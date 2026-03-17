@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
-import { OrderService } from "../services/order.service";
-import { PaymentService } from "../services/payment.service";
+import { AppContainer } from "../application/container";
 
-const paymentService = new PaymentService();
-const orderService = new OrderService();
+export function createPaymentController(container: AppContainer) {
+  const { orderService, paymentService } = container.services;
 
-export async function createPaymentIntent(req: Request, res: Response) {
-  const quote = await orderService.quote(req.body.items, req.body.couponCode);
-  const data = await paymentService.createIntent(req.body.method, quote.total);
-  return res.status(201).json(data);
+  return {
+    createPaymentIntent: async (req: Request, res: Response) => {
+      res.set("Cache-Control", "no-store");
+      const quote = await orderService.quote(req.body.items, req.body.couponCode);
+      const data = await paymentService.createIntent(req.body.method, quote.total);
+      return res.status(201).json(data);
+    }
+  };
 }

@@ -1,9 +1,13 @@
 export const DEFAULT_JWT_SECRET = "replace-this-secret";
 const MIN_JWT_SECRET_LENGTH = 32;
 
-export function assertValidJwtSecret(nodeEnv: string, jwtSecret: string) {
+export function assertValidJwtSecret(nodeEnv: string, jwtSecret: string, demoMode = false) {
   if (nodeEnv !== "production") {
     return;
+  }
+
+  if (demoMode) {
+    throw new Error("DEMO_MODE must be disabled in production");
   }
 
   if (jwtSecret === DEFAULT_JWT_SECRET) {

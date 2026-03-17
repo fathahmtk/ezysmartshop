@@ -1,43 +1,49 @@
 import { Router } from "express";
 import { z } from "zod";
-import { login, profile, register } from "../controllers/auth.controller";
+import { AppContainer } from "../application/container";
+import { createAuthController } from "../controllers/auth.controller";
 import { requireAuth } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
 
-const router = Router();
+const emptyObject = z.object({}).strict();
 
-router.post(
-  "/register",
-  validate(
-    z.object({
-      body: z.object({
-        name: z.string().min(2),
-        email: z.string().email(),
-        password: z.string().min(8)
-      }),
-      query: z.any(),
-      params: z.any()
-    })
-  ),
-  register
-);
+export default function createAuthRoutes(container: AppContainer) {
+  const router = Router();
+  const { login, profile, register } = createAuthController(container);
 
-router.post(
-  "/login",
-  validate(
-    z.object({
-      body: z.object({
-        email: z.string().email(),
-        password: z.string().min(8)
-      }),
-      query: z.any(),
-      params: z.any()
-    })
-  ),
-  login
-);
+  router.post(
+    "/register",
+    validate(
+      z.object({
+        body: z.object({
+          name: z.string().min(2),
+          email: z.string().email(),
+          password: z.string().min(8)
+        }).strict(),
+        query: emptyObject,
+        params: emptyObject
+      })
+    ),
+    register
+  );
 
-router.get("/me", requireAuth, profile);
+  router.post(
+    "/login",
+    validate(
+      z.object({
+        body: z.object({
+          email: z.string().email(),
+          password: z.string().min(8)
+        }).strict(),
+        query: emptyObject,
+        params: emptyObject
+      })
+    ),
+    login
+  );
 
-export default router;
+  router.get("/me", requireAuth, profile);
+
+  return router;
+}
 
