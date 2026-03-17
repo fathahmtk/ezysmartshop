@@ -39,7 +39,7 @@ export function Header() {
             {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
           <Link href="/" className="flex items-center gap-2">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/70 bg-white p-1">
+            <div className="relative h-22 w-22 overflow-hidden rounded-full border border-white/70 bg-white p-1">
               <Image
                 src="/logo.svg"
                 alt="EZY Smart Shop"
@@ -48,8 +48,6 @@ export function Header() {
               />
             </div>
             <div className="flex flex-col text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-              <span className="text-sm text-primary">EZY Smart Shop</span>
-              <span>UTILITY GADGETS</span>
             </div>
           </Link>
         </div>
