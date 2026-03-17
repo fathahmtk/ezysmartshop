@@ -5,6 +5,7 @@ import { HeroBanner } from "@/components/hero-banner";
 import { FeatureSpotlight } from "@/components/feature-spotlight";
 import { TrustStrip } from "@/components/trust-strip";
 import { TrustElements } from "@/components/trust-elements";
+import { ValuePromise } from "@/components/value-promise";
 import { CategoryGrid } from "@/components/category-grid";
 import { Newsletter } from "@/components/newsletter";
 import { ProductSection } from "@/components/product-section";
@@ -19,6 +20,7 @@ export default async function HomePage() {
     <>
       <AnnouncementBar />
       <HeroBanner />
+      <ValuePromise />
       <TrustStrip />
       <BestProductsShowcase products={bestProducts} />
       <TrustElements />
