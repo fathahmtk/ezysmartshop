@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { assertValidJwtSecret } from "../config/env";
+import { assertValidJwtSecret } from "../config/jwt-secret";
 
 test("does not enforce JWT_SECRET rules outside production", () => {
   assert.doesNotThrow(() => {
