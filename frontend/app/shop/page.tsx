@@ -5,19 +5,22 @@ export const metadata = {
   title: "Shop"
 };
 
+type ShopSearchParams = {
+  q?: string;
+  category?: string;
+  sort?: string;
+};
+
 type ShopPageProps = {
-  searchParams?: {
-    q?: string;
-    category?: string;
-    sort?: string;
-  };
+  searchParams?: Promise<ShopSearchParams>;
 };
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const products = await getProducts();
-  const q = searchParams?.q?.toLowerCase() || "";
-  const category = searchParams?.category || "";
-  const sort = searchParams?.sort || "popularity";
+  const q = resolvedSearchParams?.q?.toLowerCase() || "";
+  const category = resolvedSearchParams?.category || "";
+  const sort = resolvedSearchParams?.sort || "popularity";
   const filtered = products
     .filter((product) => {
       const matchesQuery = q
@@ -50,7 +53,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <form className="mb-8 grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-4">
         <input
           name="q"
-          defaultValue={searchParams?.q || ""}
+          defaultValue={resolvedSearchParams?.q || ""}
           className="rounded-full border border-slate-200 px-4 py-3 text-sm outline-none"
           placeholder="Search products"
         />
