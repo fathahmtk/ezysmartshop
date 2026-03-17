@@ -9,5 +9,9 @@ export const catalogImages = {
   bottle: "https://images.unsplash.com/photo-1505419583865-e7d7c4bf3ef6?auto=format&fit=crop&w=1200&q=80",
   ringLight: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
   blender: "https://images.unsplash.com/photo-1542826438-4cd8ab6c3a4c?auto=format&fit=crop&w=1200&q=80"
+  ,
+  diffuser: "https://images.unsplash.com/photo-1507878866276-a947ef722fee?auto=format&fit=crop&w=1200&q=80",
+  handbagSpeaker: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1200&q=80",
+  tumbler: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80"
 };
 

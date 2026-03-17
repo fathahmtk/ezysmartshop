@@ -5,7 +5,8 @@ export const categories: Category[] = [
   { id: "cat-1", name: "Smart Home", slug: "smart-home", description: "Automation essentials for modern homes." },
   { id: "cat-2", name: "Car Essentials", slug: "car-essentials", description: "Travel-ready cleaning and mounting gadgets." },
   { id: "cat-3", name: "Workspace", slug: "workspace", description: "Compact upgrades for desks and study setups." },
-  { id: "cat-4", name: "Lifestyle Tech", slug: "lifestyle-tech", description: "Everyday utility products with smart features." }
+  { id: "cat-4", name: "Lifestyle Tech", slug: "lifestyle-tech", description: "Everyday utility products with smart features." },
+  { id: "cat-5", name: "Wellness & Style", slug: "wellness-style", description: "Beauty, self-care, and stylish daily companions." }
 ];
 
 export const products: Product[] = [
@@ -162,6 +163,53 @@ export const products: Product[] = [
     badge: "New Arrival",
     specifications: ["6 stainless blades", "USB-C charging", "Leakproof lid"],
     shippingDetails: ["Ships in 48 hours", "COD available", "Warranty support"]
+  }
+  ,
+  {
+    id: "prd-11",
+    slug: "aroma-diffuser-collection",
+    title: "Port-Her Aroma Diffuser",
+    description: "Ceramic pebble diffuser with 7-color LED cue, 120ml tank, and whisper-quiet mist for bedside calm.",
+    price: 1899,
+    comparePrice: 2599,
+    stock: 80,
+    category: "Wellness & Style",
+    images: [catalogImages.diffuser],
+    rating: 4.8,
+    vendor: "EZY Smart Shop",
+    badge: "Self-care pick",
+    specifications: ["120ml tank", "Sleep mode mist", "Auto shutoff"],
+    shippingDetails: ["Ships in 24 hours", "COD + prepaid", "Free essential oil spritzer"]
+  },
+  {
+    id: "prd-12",
+    slug: "handbag-bluetooth-speaker",
+    title: "Mini Handbag Bluetooth Speaker",
+    description: "Pearl pod speaker with strap clip, 6-hour playback, and sculpted bass suited for handbags and desks.",
+    price: 1299,
+    comparePrice: 1799,
+    stock: 130,
+    category: "Wellness & Style",
+    images: [catalogImages.handbagSpeaker],
+    rating: 4.6,
+    vendor: "EZY Smart Shop",
+    specifications: ["6-hour battery", "Strap clip + lanyard", "Water-resistant IPX4"],
+    shippingDetails: ["Ships in 24 hours", "COD available", "Gift-ready packaging"]
+  },
+  {
+    id: "prd-13",
+    slug: "glass-tumbler-bottle",
+    title: "Thermal Glass Tumbler",
+    description: "Double-walled glass tumbler with bamboo lid, silicone sleeve, and 10-hour retention for teas and smoothies.",
+    price: 999,
+    comparePrice: 1399,
+    stock: 150,
+    category: "Wellness & Style",
+    images: [catalogImages.tumbler],
+    rating: 4.7,
+    vendor: "EZY Smart Shop",
+    specifications: ["10-hour insulation", "Bamboo lid", "Silicone sleeve"],
+    shippingDetails: ["Ships in 24 hours", "COD + prepaid", "Complimentary gift card wrap"]
   }
 ];
 
