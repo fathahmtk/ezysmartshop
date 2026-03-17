@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -27,23 +28,28 @@ export function Header() {
       className="sticky top-0 z-50 border-b border-white/70 bg-shell/80 backdrop-blur-xl"
     >
       <div className="container-shell flex items-center justify-between gap-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            className="rounded-full border border-slate-200 p-2 lg:hidden"
-            aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}
-            aria-expanded={isMenuOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => setIsMenuOpen((current) => !current)}
-          >
-            {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-          <Link href="/" className="flex items-center gap-3 text-base font-semibold tracking-tight text-primary">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
-              EZ
-            </div>
-            <span className="hidden text-[10px] uppercase tracking-[0.4em] text-slate-500 lg:block">UTILITY GADGETS</span>
-          </Link>
-        </div>
+          <div className="flex items-center gap-3">
+            <button
+              className="rounded-full border border-slate-200 p-2 lg:hidden"
+              aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
+              onClick={() => setIsMenuOpen((current) => !current)}
+            >
+              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+            <Link href="/" className="flex items-center gap-3 text-base font-semibold tracking-tight text-primary">
+              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/60 bg-white/20 p-1">
+                <Image
+                  src="https://photos.fife.usercontent.google.com/pw/AP1GczMBukINmkrCIg8dIa9MoLxl5YyI1nHzMNddcBLveE51b_GZw8G0CqvIwA=w1319-h879-s-no-gm?authuser=0"
+                  alt="EZY Smart Shop logo"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="hidden text-[10px] uppercase tracking-[0.4em] text-slate-500 lg:block">UTILITY GADGETS</span>
+            </Link>
+          </div>
         <div className="hidden items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-orange-700 md:flex">
           <ShieldCheck className="h-4 w-4" />
           Secure checkout + COD
