@@ -1,6 +1,6 @@
 # EZY Smart Shop
 
-Headless ecommerce monorepo for `https://ezysmartshop.com`, designed for India-focused smart gadgets and home utility sales.
+Headless ecommerce monorepo for `https://ezysmartshop.com`, built from the ground up as a live online store—not a portfolio—designed for India-focused smart gadgets and high-velocity home utility sales.
 
 ## Stack
 
@@ -35,7 +35,7 @@ backend/    Express API, services, schema, seed data
    npm run dev:frontend
    ```
 
-The project is set up to run in preview mode with seeded data even if PostgreSQL, Redis, Stripe, Razorpay, or Firebase are not configured yet.
+The project is set up to run in preview mode with seeded data even if PostgreSQL, Redis, Stripe, Razorpay, or Firebase are not configured yet; however, every screen is modeled as a transactional shopping experience (cart, checkout, order reviews) rather than a showcase portfolio.
 
 For a production deployment baseline:
 
