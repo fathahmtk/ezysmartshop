@@ -7,13 +7,22 @@ import { getProductBySlug, getProducts } from "@/utils/api";
 import { ProductSection } from "@/components/product-section";
 import { ProductActions } from "@/components/product-actions";
 
+type ProductPageParams = {
+  slug: string;
+};
+
+type ProductPageProps = {
+  params: Promise<ProductPageParams>;
+};
+
 export async function generateStaticParams() {
   const products = await getProducts();
   return products.map((product) => ({ slug: product.slug }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
   if (!product) return {};
 
   return {
@@ -27,8 +36,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const [product, products] = await Promise.all([getProductBySlug(params.slug), getProducts()]);
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
+  const [product, products] = await Promise.all([getProductBySlug(slug), getProducts()]);
   if (!product) notFound();
 
   const productSchema = {
