@@ -8,6 +8,9 @@ import { createOrder, createPaymentIntent, fetchQuote } from "@/utils/client-api
 import { useCart } from "@/components/cart-provider";
 import { CheckoutQuote } from "@/utils/types";
 import { getBundleOffers } from "@/utils/bundle-offers";
+import { isShopifyConfigured } from "@/utils/shopify";
+
+const shopifyMode = isShopifyConfigured();
 
 const initialAddress = {
   fullName: "Priya Sharma",
@@ -29,14 +32,22 @@ export function CheckoutPageClient() {
   const [isPending, startTransition] = useTransition();
   const { addItem, cart, refreshCart } = useCart();
 
+  // When Shopify is configured, checkout is handled by Shopify's native checkout.
+  // Redirect as soon as the checkout URL is available.
+  useEffect(() => {
+    if (shopifyMode && cart?.checkoutUrl) {
+      window.location.href = cart.checkoutUrl;
+    }
+  }, [cart?.checkoutUrl]);
+
   const items = useMemo(
     () => cart?.items.map((item) => ({ productId: item.productId, quantity: item.quantity })) || [],
     [cart]
   );
-  const orderBump = getBundleOffers(items.map((item) => item.productId))[0] || null;
+  const orderBump = !shopifyMode ? (getBundleOffers(items.map((item) => item.productId))[0] || null) : null;
 
   useEffect(() => {
-    if (!items.length) {
+    if (shopifyMode || !items.length) {
       setQuote(null);
       return;
     }
@@ -50,6 +61,7 @@ export function CheckoutPageClient() {
       }
     });
   }, [items, couponCode]);
+
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,6 +94,19 @@ export function CheckoutPageClient() {
 
   return (
     <section className="container-shell py-10">
+      {shopifyMode ? (
+        <div className="flex flex-col items-center gap-4 py-24 text-center">
+          <p className="text-lg font-semibold text-primary">Redirecting to Shopify checkout…</p>
+          {cart?.checkoutUrl ? (
+            <a href={cart.checkoutUrl} className="button-primary">
+              Click here if not redirected automatically
+            </a>
+          ) : (
+            <p className="text-sm text-slate-500">Preparing your cart, please wait.</p>
+          )}
+        </div>
+      ) : (
+        <>
       <div className="mb-8 space-y-3">
         <p className="eyebrow">Checkout flow</p>
         <h1 className="section-title">Address, shipping, payment, confirmation.</h1>
@@ -228,6 +253,8 @@ export function CheckoutPageClient() {
           </div>
         </aside>
       </div>
+        </>
+      )}
     </section>
   );
 }

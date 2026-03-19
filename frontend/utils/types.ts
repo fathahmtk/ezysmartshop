@@ -41,6 +41,8 @@ export type CartState = {
   id: string;
   userId: string;
   items: CartLine[];
+  /** Shopify-managed checkout URL; present only when Shopify integration is active. */
+  checkoutUrl?: string;
 };
 
 export type CheckoutQuote = {

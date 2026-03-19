@@ -1,5 +1,11 @@
 import { cache } from "react";
 import { categories, products, testimonials } from "@/utils/mock-data";
+import {
+  isShopifyConfigured,
+  getShopifyProducts,
+  getShopifyProductByHandle,
+  getShopifyCollections
+} from "@/utils/shopify";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -28,14 +34,35 @@ export function getFlashDeals() {
 }
 
 export const getProducts = cache(async function getProducts() {
+  if (isShopifyConfigured()) {
+    try {
+      return await getShopifyProducts();
+    } catch {
+      // fall through to custom backend / mock data
+    }
+  }
   return tryFetch("/products", products);
 });
 
 export const getProductBySlug = cache(async function getProductBySlug(slug: string) {
+  if (isShopifyConfigured()) {
+    try {
+      return await getShopifyProductByHandle(slug);
+    } catch {
+      // fall through to custom backend / mock data
+    }
+  }
   return tryFetch(`/products/${slug}`, products.find((product) => product.slug === slug));
 });
 
 export const getCategories = cache(async function getCategories() {
+  if (isShopifyConfigured()) {
+    try {
+      return await getShopifyCollections();
+    } catch {
+      // fall through to custom backend / mock data
+    }
+  }
   return tryFetch("/categories", categories);
 });
 

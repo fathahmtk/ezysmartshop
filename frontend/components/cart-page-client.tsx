@@ -6,6 +6,9 @@ import { Plus, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useCart } from "@/components/cart-provider";
 import { getBundleOffers } from "@/utils/bundle-offers";
+import { isShopifyConfigured } from "@/utils/shopify";
+
+const shopifyMode = isShopifyConfigured();
 
 export function CartPageClient() {
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +113,7 @@ export function CartPageClient() {
               !isPending && <p className="text-sm text-slate-500">Your cart is empty.</p>
             )}
           </div>
-          {cart?.items.length ? (
+          {cart?.items.length && !shopifyMode ? (
             <div className="mt-8 rounded-[1.9rem] border border-orange-100 bg-[#fff8ef] p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -194,14 +197,22 @@ export function CartPageClient() {
               <ShieldCheck className="mt-0.5 h-4 w-4 text-orange-600" />
               <span>Secure online payments and Cash on Delivery available.</span>
             </div>
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-4 w-4 text-orange-600" />
-              <span>Bundle suggestions are shown here to lift order value without slowing the path to checkout.</span>
-            </div>
+            {!shopifyMode ? (
+              <div className="flex items-start gap-3">
+                <Sparkles className="mt-0.5 h-4 w-4 text-orange-600" />
+                <span>Bundle suggestions are shown here to lift order value without slowing the path to checkout.</span>
+              </div>
+            ) : null}
           </div>
-          <Link href="/checkout" className="button-primary mt-6 w-full">
-            Proceed to checkout
-          </Link>
+          {shopifyMode && cart?.checkoutUrl ? (
+            <a href={cart.checkoutUrl} className="button-primary mt-6 w-full text-center">
+              Proceed to checkout
+            </a>
+          ) : (
+            <Link href="/checkout" className="button-primary mt-6 w-full">
+              Proceed to checkout
+            </Link>
+          )}
         </aside>
       </div>
     </section>

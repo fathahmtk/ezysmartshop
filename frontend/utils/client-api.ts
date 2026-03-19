@@ -1,11 +1,68 @@
 "use client";
 
 import { CartState, CheckoutQuote, OrderRecord } from "@/utils/types";
+import {
+  isShopifyConfigured,
+  createShopifyCart,
+  addShopifyCartLines,
+  updateShopifyCartLines,
+  removeShopifyCartLines,
+  fetchShopifyCart,
+  mapShopifyCart
+} from "@/utils/shopify";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 const DEMO_EMAIL = "priya@example.com";
 const DEMO_PASSWORD = "Customer@123";
+
+// ─── Shopify cart helpers ────────────────────────────────────────────────────
+
+const SHOPIFY_CART_ID_KEY = "shopify_cart_id";
+
+function getStoredCartId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(SHOPIFY_CART_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeCartId(cartId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SHOPIFY_CART_ID_KEY, cartId);
+  } catch {
+    // localStorage may be unavailable in some contexts
+  }
+}
+
+function clearStoredCartId(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(SHOPIFY_CART_ID_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+async function getOrCreateShopifyCart(
+  lines: Array<{ merchandiseId: string; quantity: number }> = []
+): Promise<ReturnType<typeof mapShopifyCart>> {
+  const existingId = getStoredCartId();
+  if (existingId) {
+    const cart = await fetchShopifyCart(existingId);
+    if (cart) return mapShopifyCart(cart);
+    // cart no longer exists on Shopify — create a new one
+    clearStoredCartId();
+  }
+  const newCart = await createShopifyCart(lines);
+  storeCartId(newCart.id);
+  return mapShopifyCart(newCart);
+}
+
+// ─── Custom backend helpers ──────────────────────────────────────────────────
 
 let csrfTokenCache: string | null = null;
 let loginPromise: Promise<void> | null = null;
@@ -83,35 +140,92 @@ export function getDemoCredentials() {
   };
 }
 
-export function fetchCart() {
+// ─── Cart API (Shopify or custom backend) ────────────────────────────────────
+
+export async function fetchCart(): Promise<CartState> {
+  if (isShopifyConfigured()) {
+    const cartId = getStoredCartId();
+    if (!cartId) {
+      // No cart yet — return an empty cart state
+      return { id: "", userId: "", items: [] };
+    }
+    const cart = await fetchShopifyCart(cartId);
+    if (!cart) {
+      clearStoredCartId();
+      return { id: "", userId: "", items: [] };
+    }
+    return mapShopifyCart(cart);
+  }
   return authedRequest<CartState>("/cart");
 }
 
-export function addCartItem(productId: string, quantity: number) {
+export async function addCartItem(productId: string, quantity: number): Promise<CartState> {
+  if (isShopifyConfigured()) {
+    const cartId = getStoredCartId();
+    const line = { merchandiseId: productId, quantity };
+    if (!cartId) {
+      return getOrCreateShopifyCart([line]);
+    }
+    const existingCart = await fetchShopifyCart(cartId);
+    if (!existingCart) {
+      clearStoredCartId();
+      return getOrCreateShopifyCart([line]);
+    }
+    const updated = await addShopifyCartLines(cartId, [line]);
+    storeCartId(updated.id);
+    return mapShopifyCart(updated);
+  }
   return authedRequest<CartState>("/cart/items", {
     method: "POST",
     body: JSON.stringify({ productId, quantity })
   });
 }
 
-export function updateCartItem(itemId: string, quantity: number) {
+export async function updateCartItem(itemId: string, quantity: number): Promise<CartState> {
+  if (isShopifyConfigured()) {
+    const cartId = getStoredCartId();
+    if (!cartId) return { id: "", userId: "", items: [] };
+    if (quantity <= 0) {
+      const updated = await removeShopifyCartLines(cartId, [itemId]);
+      return mapShopifyCart(updated);
+    }
+    const updated = await updateShopifyCartLines(cartId, [{ id: itemId, quantity }]);
+    return mapShopifyCart(updated);
+  }
   return authedRequest<CartState>(`/cart/items/${itemId}`, {
     method: "PATCH",
     body: JSON.stringify({ quantity })
   });
 }
 
-export function removeCartItem(itemId: string) {
+export async function removeCartItem(itemId: string): Promise<CartState> {
+  if (isShopifyConfigured()) {
+    const cartId = getStoredCartId();
+    if (!cartId) return { id: "", userId: "", items: [] };
+    const updated = await removeShopifyCartLines(cartId, [itemId]);
+    return mapShopifyCart(updated);
+  }
   return authedRequest<CartState>(`/cart/items/${itemId}`, {
     method: "DELETE"
   });
 }
 
-export function clearCart() {
+export async function clearCart(): Promise<CartState> {
+  if (isShopifyConfigured()) {
+    const cartId = getStoredCartId();
+    if (!cartId) return { id: "", userId: "", items: [] };
+    const cart = await fetchShopifyCart(cartId);
+    if (!cart || !cart.lines.edges.length) return { id: cartId, userId: "", items: [] };
+    const lineIds = cart.lines.edges.map(({ node }) => node.id);
+    const updated = await removeShopifyCartLines(cartId, lineIds);
+    return mapShopifyCart(updated);
+  }
   return authedRequest<CartState>("/cart", {
     method: "DELETE"
   });
 }
+
+// ─── Order / Payment API (custom backend only) ───────────────────────────────
 
 export function fetchQuote(items: Array<{ productId: string; quantity: number }>, couponCode?: string) {
   return authedRequest<CheckoutQuote>("/orders/quote", {
