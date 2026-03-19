@@ -11,6 +11,7 @@ Headless ecommerce monorepo for `https://ezysmartshop.com`, built from the groun
 - Payments: Razorpay, Stripe, Cash on Delivery
 - Search: Firestore/Elasticsearch-ready abstraction with local fallback
 - AI: Gemini-powered recommendations with deterministic fallback
+- **Shopify**: optional Storefront API integration (products, cart, native checkout)
 
 ## Structure
 
@@ -45,6 +46,49 @@ For a production deployment baseline:
 - Set a long unique `JWT_SECRET`
 - Configure real Stripe and/or Razorpay credentials before enabling those payment methods
 - Run `npm run ci` before every release
+
+## Shopify integration
+
+Set the two variables below in your `.env` to connect the storefront to your Shopify store via the [Storefront API](https://shopify.dev/docs/api/storefront):
+
+```env
+NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN=your_storefront_access_token
+```
+
+When both variables are present the storefront will:
+
+| Feature | Behaviour |
+|---------|-----------|
+| Product listing & search | Fetched live from Shopify via GraphQL |
+| Product detail pages | Fetched by handle from Shopify |
+| Collections / categories | Fetched from Shopify collections |
+| Cart (add / update / remove) | Managed via Shopify Storefront Cart API; cart ID stored in `localStorage` |
+| Checkout | Redirects to Shopify's hosted checkout URL |
+
+If the variables are **not** set the storefront falls back to the built-in Express backend (or demo/mock data), exactly as before. No other code changes are required to switch between modes.
+
+### How to get the Storefront Access Token
+
+1. Open your Shopify admin → **Apps** → **Develop apps**.
+2. Create (or open) a private app.
+3. Under **API credentials** → **Storefront API access scopes** enable at minimum:
+   - `unauthenticated_read_product_listings`
+   - `unauthenticated_write_checkouts`
+   - `unauthenticated_read_checkouts`
+4. Copy the **Storefront API access token** into `.env`.
+
+### Optional: Shopify product metafields
+
+The integration reads the following metafields (namespace `custom`) to enrich product pages:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `badge` | single_line_text_field | Badge label shown on product card (e.g. "Flash Deal") |
+| `specifications` | json | JSON array of specification strings |
+| `shipping_details` | json | JSON array of shipping detail strings |
+
+These are all optional; sensible defaults are used when they are absent.
 
 ## Bootstrap admin credentials
 
